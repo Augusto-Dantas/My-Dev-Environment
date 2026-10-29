@@ -7,6 +7,6 @@ My personal ready to ship dev environment
     git clone https://github.com/Augusto-Dantas/My-Dev-Environment
     cd My-Dev-Environmenti/
     docker compose build devenv
-    docker compose up -d dev
+    docker compose up -d devenv
     docker compose exec devenv zsh
 ```
