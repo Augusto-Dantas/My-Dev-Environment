@@ -14,7 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SHELL=/bin/zsh
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl wget git unzip tar gzip xz-utils gnupg sudo locales \
+    ca-certificates curl wget ssh gh git unzip tar gzip xz-utils gnupg sudo locales \
     tmux zsh jq ripgrep fd-find \
     build-essential gcc g++ gdb valgrind cmake ninja-build pkg-config \
     clang clangd clang-format lld lldb \
