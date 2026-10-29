@@ -1,21 +1,14 @@
 local nvlsp = require("nvchad.configs.lspconfig")
-nvlsp.defaults()
 
-local servers = { "bashls", "dockerls", "ts_ls", "ruff" }
-local lspconfig = require("lspconfig")
+local servers = { "bashls", "dockerls", "ts_ls", "ruff", "pyright", "clangd" }
 
-for _, lsp in ipairs(servers) do
-  lspconfig[lsp].setup({
-    on_attach = nvlsp.on_attach,
-    on_init = nvlsp.on_init,
-    capabilities = nvlsp.capabilities,
-  })
-end
-
-lspconfig.pyright.setup({
+vim.lsp.config("*", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
   capabilities = nvlsp.capabilities,
+})
+
+vim.lsp.config("pyright", {
   settings = {
     python = {
       analysis = {
@@ -27,10 +20,7 @@ lspconfig.pyright.setup({
   },
 })
 
-lspconfig.clangd.setup({
-  on_attach = nvlsp.on_attach,
-  on_init = nvlsp.on_init,
-  capabilities = nvlsp.capabilities,
+vim.lsp.config("clangd", {
   cmd = {
     "clangd",
     "--background-index",
@@ -39,3 +29,5 @@ lspconfig.clangd.setup({
     "--completion-style=detailed",
   },
 })
+
+vim.lsp.enable(servers)

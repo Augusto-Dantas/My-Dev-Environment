@@ -7,7 +7,7 @@ M.base46 = {
 }
 
 M.ui = {
-  statusline = { theme = "default" },
+  statusline = { theme = "" },
   tabufline = { enabled = true },
 }
 
