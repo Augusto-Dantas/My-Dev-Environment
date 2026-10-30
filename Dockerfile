@@ -69,7 +69,7 @@ RUN git clone --depth 1 https://github.com/NvChad/starter /home/$USERNAME/.confi
 COPY --chown=$USERNAME:$USERNAME ./nvim-config/ /home/$USERNAME/.config/nvim/
 COPY --chown=$USERNAME:$USERNAME ./.zshrc /home/$USERNAME/.zshrc
 
-RUN nvim --headless "+Lazy! sync" +qa || true
+RUN nvim --headless "+Lazy! sync" +qa
 
 WORKDIR /workspace
 CMD ["sleep", "infinity"]
