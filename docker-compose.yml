@@ -11,7 +11,7 @@ services:
     command: /bin/zsh
     volumes:
       - ./workspace:/workspace
-      - nvim-data:/home/developer/.local/share/nvim
+      - nvim-data-v3:/home/developer/.local/share/nvim
       - nvim-state:/home/developer/.local/state/nvim
       - cargo-cache:/home/developer/.cargo/registry
     environment:
@@ -20,6 +20,6 @@ services:
       - SHELL=/bin/zsh
 
 volumes:
-  nvim-data:
+  nvim-data-v3:
   nvim-state:
   cargo-cache:
