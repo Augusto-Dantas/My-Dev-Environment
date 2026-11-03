@@ -1,4 +1,3 @@
-
 return {
   {
     "nvchad/base46",
@@ -9,7 +8,6 @@ return {
   },
   {
     "nvchad/ui",
-    branch = "v2.5",
   },
   {
     "stevearc/conform.nvim",
