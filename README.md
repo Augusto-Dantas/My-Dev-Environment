@@ -10,13 +10,11 @@ A ready-to-use development environment powered by Docker, Zsh, Neovim, and NvCha
 
 ## Quick start
 
-Copy and paste this single command into your terminal:
+Copy and paste this command into your terminal:
 
 ```bash
 git clone https://github.com/Augusto-Dantas/My-Dev-Environment.git && cd My-Dev-Environment && docker compose up -d --build && docker compose exec devenv zsh
 ```
-
-That's it. Docker builds the image, starts the development container, and opens a Zsh shell inside it.
 
 ## Useful commands
 
