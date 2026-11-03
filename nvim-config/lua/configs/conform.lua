@@ -1,9 +1,10 @@
+
 return {
   formatters_by_ft = {
     lua = { "stylua" },
     python = { "ruff_format", "ruff_organize_imports" },
-    c = { "clang-format" },
-    cpp = { "clang-format" },
+    c = { "clang_format" },
+    cpp = { "clang_format" },
     rust = { "rustfmt" },
     javascript = { "prettier" },
     typescript = { "prettier" },
