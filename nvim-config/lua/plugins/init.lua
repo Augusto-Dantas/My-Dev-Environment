@@ -1,4 +1,16 @@
+
 return {
+  {
+    "nvchad/base46",
+    branch = "v2.5",
+    build = function()
+      require("base46").load_all_highlights()
+    end,
+  },
+  {
+    "nvchad/ui",
+    branch = "v2.5",
+  },
   {
     "stevearc/conform.nvim",
     event = "BufWritePre",
@@ -17,7 +29,7 @@ return {
         "c", "cpp", "cmake", "make", "rust", "ron",
         "python", "julia", "lua", "vim", "vimdoc",
         "javascript", "typescript", "json", "yaml", "toml",
-        "bash", "dockerfile", "markdown", "markdown_inline"
+        "bash", "dockerfile", "markdown", "markdown_inline",
       },
       highlight = { enable = true },
       indent = { enable = true },
