@@ -72,6 +72,7 @@ The current host directory is mounted into the container at `/workspace`. Each h
 | Command | Description |
 | --- | --- |
 | `devbox --help` | Show all commands and usage information |
+| `devbox --uninstall` | Uninstall Devbox after explicit confirmation |
 | `devbox` or `devbox shell` | Start the linked environment and open a Zsh shell |
 | `devbox new` | Create a project with an interactive setup wizard |
 | `devbox up` | Build (if needed) and start the linked container in the background |
@@ -92,7 +93,7 @@ The interactive wizard asks for the project name and language profile, whether t
 
 Choose an existing registered development container or create a new one with a custom name. Projects linked to an existing container are created under that container's workspace directory. Container and project mappings are stored in your user configuration directory, not inside the generated project.
 
-Use `devbox --help` at any time to see the available commands.
+Use `devbox --help` at any time to see the available commands.\n\n### Uninstall\n\nRun `devbox --uninstall` and type `UNINSTALL` when prompted to authorize removal. The command removes the Devbox launcher, CLI, downloaded installation files (including the local `.env`), and Devbox user mappings. It does not delete project directories, stop or remove Docker containers, or delete Docker volumes. If the current user lacks filesystem permission to remove an installation file, the command reports the failure; rerun only after correcting ownership or permissions.
 
 ## AI coding assistants
 
