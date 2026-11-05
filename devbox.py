@@ -148,6 +148,9 @@ def create_project() -> int:
         container_name = input(f"New container name [devbox-{key_for(str(target))[:8]}]: ").strip()
         if not container_name:
             container_name = "devbox-" + key_for(str(target))[:8]
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", container_name):
+            print("Container names may contain letters, numbers, dots, underscores, and hyphens.", file=sys.stderr)
+            return 2
         if any(item["name"] == container_name for item in containers):
             print("A container with that name is already registered.", file=sys.stderr)
             return 2
@@ -166,7 +169,7 @@ def create_project() -> int:
         print(f"Target already exists: {target}", file=sys.stderr)
         return 2
 
-    language = choose("Project type:", ["General", *GITIGNORES.keys()], 0)
+    language = choose("Project type:", list(GITIGNORES.keys()), 0)
     use_git = ask("Initialize a Git repository?", True)
     add_readme = ask("Create a README.md?", True)
     add_gitignore = ask("Create a .gitignore?", True)
@@ -175,6 +178,9 @@ def create_project() -> int:
     visibility = "private"
     if publish:
         visibility = choose("GitHub repository visibility:", ["Private", "Public"], 0).lower()
+        if not use_git:
+            print("Git initialization is required to publish a repository. Enabling Git.")
+            use_git = True
         if not shutil.which("gh"):
             print("GitHub CLI (gh) is not installed. Skipping GitHub creation.")
             publish = False
