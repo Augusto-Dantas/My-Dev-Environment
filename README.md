@@ -9,7 +9,7 @@ Requisitos no host: Docker Engine/Desktop com Compose v2, Git, curl e Python 3.
 Enquanto a implementação estiver em revisão, use a branch de desenvolvimento:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/feat/ai-integrations-tui-setup/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/feat/ai-integrations-tui-setup/setup.sh -o /tmp/devbox-setup.sh && bash /tmp/devbox-setup.sh
 ```
 
 O instalador é independente e baixa somente o script Python. A TUI permite selecionar:
