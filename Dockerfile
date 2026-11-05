@@ -4,6 +4,7 @@ ARG USERNAME=developer
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG EDITOR_CHOICE=nvim
+ARG EDITOR_CHOICES=nvim
 ARG INSTALL_RUST=0
 ARG INSTALL_CPP=0
 ARG INSTALL_PYTHON=0
@@ -23,8 +24,10 @@ RUN set -eux; \
     if [ "$INSTALL_CPP" = "1" ]; then packages="$packages build-essential gcc g++ gdb valgrind cmake ninja-build pkg-config clang clangd clang-format lld lldb"; fi; \
     if [ "$INSTALL_PYTHON" = "1" ]; then packages="$packages python3 python3-pip python3-venv python3-dev"; fi; \
     if [ "$INSTALL_JAVA" = "1" ]; then packages="$packages openjdk-17-jdk-headless"; fi; \
-    if [ "$EDITOR_CHOICE" = "vim" ]; then packages="$packages vim"; fi; \
-    if [ "$EDITOR_CHOICE" = "helix" ]; then packages="$packages helix"; fi; \
+    case ",$EDITOR_CHOICES," in *,vim,*) packages="$packages vim";; esac; \
+    case ",$EDITOR_CHOICES," in *,helix,*) packages="$packages helix";; esac; \
+    case ",$EDITOR_CHOICES," in *,emacs,*) packages="$packages emacs-nox";; esac; \
+    case ",$EDITOR_CHOICES," in *,micro,*) packages="$packages micro";; esac; \
     apt-get update; \
     apt-get install -y --no-install-recommends $packages; \
     sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen; \
@@ -41,7 +44,7 @@ RUN if [ "$INSTALL_GO" = "1" ]; then \
       apt-get update && apt-get install -y --no-install-recommends golang-go && rm -rf /var/lib/apt/lists/*; \
     fi
 
-RUN if [ "$EDITOR_CHOICE" = "nvim" ]; then \
+RUN if echo ",$EDITOR_CHOICES," | grep -q ",nvim,"; then \
       ARCH=$(dpkg --print-architecture); \
       if [ "$ARCH" = "arm64" ]; then NVIM_ARCH="arm64"; else NVIM_ARCH="x86_64"; fi; \
       curl -fsSL "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-${NVIM_ARCH}.tar.gz" -o /tmp/nvim.tar.gz; \
@@ -49,6 +52,8 @@ RUN if [ "$EDITOR_CHOICE" = "nvim" ]; then \
       ln -sf "/opt/nvim-linux-${NVIM_ARCH}/bin/nvim" /usr/local/bin/nvim; \
       rm /tmp/nvim.tar.gz; \
     fi
+
+RUN case ",$EDITOR_CHOICES," in *,code-server,*) curl -fsSL https://code-server.dev/install.sh | sh;; esac
 
 RUN ARCH=$(dpkg --print-architecture) && \
     if [ "$ARCH" = "arm64" ]; then LG_ARCH="arm64"; else LG_ARCH="x86_64"; fi && \
@@ -77,15 +82,14 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
     git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
     git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
-RUN if [ "$EDITOR_CHOICE" = "nvim" ]; then \
+RUN if echo ",$EDITOR_CHOICES," | grep -q ",nvim,"; then \
       git clone --depth 1 https://github.com/NvChad/starter /home/$USERNAME/.config/nvim && \
       rm -rf /home/$USERNAME/.config/nvim/.git; \
     elif [ "$EDITOR_CHOICE" = "vim" ]; then \
       printf 'set number\nsyntax on\nset expandtab\nset shiftwidth=4\nset tabstop=4\n' > /home/$USERNAME/.vimrc; \
-    elif [ "$EDITOR_CHOICE" = "helix" ]; then \
-      mkdir -p /home/$USERNAME/.config/helix && \
-      printf 'theme = "onedark"\n[editor]\nline-number = "relative"\nmouse = true\n[editor.cursor-shape]\ninsert = "bar"\n' > /home/$USERNAME/.config/helix/config.toml; \
-    fi
+    fi; \
+    if echo ",$EDITOR_CHOICES," | grep -q ",helix,"; then mkdir -p /home/$USERNAME/.config/helix && printf 'theme = "onedark"\n[editor]\nline-number = "relative"\nmouse = true\n[editor.cursor-shape]\ninsert = "bar"\n' > /home/$USERNAME/.config/helix/config.toml; fi; \
+    if echo ",$EDITOR_CHOICES," | grep -q ",vim,"; then printf 'set number\nsyntax on\nset expandtab\nset shiftwidth=4\nset tabstop=4\n' > /home/$USERNAME/.vimrc; fi
 
 COPY --chown=$USERNAME:$USERNAME ./nvim-config/ /home/$USERNAME/.config/nvim/
 COPY --chown=$USERNAME:$USERNAME ./.zshrc /home/$USERNAME/.zshrc

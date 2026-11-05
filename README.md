@@ -10,15 +10,18 @@ Install the following tools on your host:
 - Git
 - curl
 - Python 3
+- GitHub CLI (`gh`) — [installation instructions](https://github.com/cli/cli#installation)
+
+The installer stops with a clear error if `gh` is missing. Authenticate with `gh auth login` to enable GitHub repository creation and other authenticated GitHub workflows.
 
 ## Install without cloning the full repository
 
-The standalone installer downloads only the setup script first. It then opens an interactive terminal UI (TUI) where you can select the development tools and editor you want.
+The standalone installer downloads only the setup script first. It then opens an interactive terminal UI (TUI) where you can select the development tools and editors you want.
 
 While this feature is under review, run the installer from the feature branch:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/feat/ai-integrations-tui-setup/setup.sh -o /tmp/devbox-setup.sh
+curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/feat/devbox-project-scaffolding/setup.sh -o /tmp/devbox-setup.sh
 bash /tmp/devbox-setup.sh
 ```
 
@@ -33,14 +36,18 @@ The TUI lets you choose from these language toolchains:
 | Go | Go compiler and standard tools |
 | Java | OpenJDK 17 |
 
-You can also select one editor:
+You can select **multiple editors** in the setup TUI (press Space to toggle each option):
 
 - **Neovim + NvChad**
 - **Vim**
 - **Helix**
-- **No editor**
+- **Emacs (terminal)**
+- **Micro (terminal)**
+- **VS Code in your browser (code-server)**
 
-GitHub Copilot and CodeCompanion are optional integrations available when Neovim is selected.
+At least one editor must be selected. The first selected editor becomes the default for `$EDITOR`. The code-server option provides a graphical VS Code-like interface in your browser, bound to `localhost:8080`; its generated password is stored in the private Devbox `.env` file.
+
+GitHub Copilot and CodeCompanion are optional integrations available when Neovim is selected. The installer requires `gh` on the host for GitHub-backed license and repository workflows.
 
 After you confirm your choices, the installer performs a Git sparse checkout of only the files required to build the image: the Dockerfile, Compose file, Zsh configuration, and Neovim configuration. It does not download the full repository history or unrelated files. The Docker image is built on the first `devbox` invocation.
 
@@ -71,12 +78,30 @@ The current host directory is mounted into the container at `/workspace`. Each h
 
 | Command | Description |
 | --- | --- |
-| `devbox` or `devbox shell` | Start the environment and open a Zsh shell |
-| `devbox up` | Build (if needed) and start the container in the background |
-| `devbox status` | Show the container status |
-| `devbox logs` | Follow container logs |
-| `devbox restart` | Rebuild and restart the container |
-| `devbox down` | Stop and remove the container for the current directory |
+| `devbox --help` | Show all commands and usage information |
+| `devbox --uninstall` | Uninstall Devbox after explicit confirmation |
+| `devbox` or `devbox shell` | Start the linked environment and open a Zsh shell |
+| `devbox new` | Create a project with an interactive setup wizard |
+| `devbox up` | Build (if needed) and start the linked container in the background |
+| `devbox status` | Show the linked container status |
+| `devbox logs` | Follow linked container logs |
+| `devbox gui` | Start the browser-based graphical editor (code-server) |
+| `devbox restart` | Rebuild and restart the linked container |
+| `devbox down` | Stop and remove the linked container |
+
+### Create a project
+
+Run:
+
+```bash
+devbox new
+```
+
+The interactive wizard asks for the project name and language profile, whether to initialize Git, create a README, generate a language-appropriate `.gitignore`, and add a license. Licenses are retrieved from GitHub through `gh repo license view` (MIT, Apache-2.0, GPL-3.0, BSD-3-Clause, or MPL-2.0); The GitHub CLI (`gh`) is a required host dependency for these workflows. You can also create a GitHub repository through `gh` if it is installed and authenticated.
+
+Choose an existing registered development container or create a new one with a custom name. Projects linked to an existing container are created under that container's workspace directory. Container and project mappings are stored in your user configuration directory, not inside the generated project.
+
+Use `devbox --help` at any time to see the available commands.\n\n### Uninstall\n\nRun `devbox --uninstall` and type `UNINSTALL` when prompted to authorize removal. The command removes the Devbox launcher, CLI, downloaded installation files (including the local `.env`), and Devbox user mappings. It does not delete project directories, stop or remove Docker containers, or delete Docker volumes. If the current user lacks filesystem permission to remove an installation file, the command reports the failure; rerun only after correcting ownership or permissions.
 
 ## AI coding assistants
 
@@ -104,7 +129,7 @@ The file is created with restricted permissions and is not part of the Git check
 
 ## Change your configuration
 
-Run the installer again to choose a different set of language toolchains, editor, or AI integrations. Then, from the project directory where you want to apply the new image profile, run:
+Run the installer again to choose a different set of language toolchains, editors, or AI integrations. Then, from the project directory where you want to apply the new image profile, run:
 
 ```bash
 devbox restart

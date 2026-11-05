@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Standalone installer: sparse-checkout only the files required for the image."""
 from __future__ import annotations
-import argparse, curses, getpass, os, shutil, subprocess
+import argparse, curses, getpass, os, secrets, shutil, subprocess
 from pathlib import Path
 
 LANGUAGES = [
@@ -12,11 +12,11 @@ LANGUAGES = [
     ("go", "Go — compiler and standard tools"),
     ("java", "Java — OpenJDK 17"),
 ]
-EDITORS = [("nvim", "Neovim + NvChad"), ("vim", "Vim"), ("helix", "Helix"), ("none", "No editor")]
+EDITORS = [("nvim", "Neovim + NvChad"), ("vim", "Vim"), ("helix", "Helix"), ("emacs", "Emacs (terminal)"), ("micro", "Micro (terminal)"), ("code-server", "VS Code in your browser (graphical)")]
 
 def tui(stdscr):
     curses.curs_set(0); stdscr.keypad(True)
-    state={"langs":{x[0]:x[0]=="rust" for x in LANGUAGES},"editor":"nvim","copilot":False,"chat":False}
+    state={"langs":{x[0]:x[0]=="rust" for x in LANGUAGES},"editors":{"nvim":True,"vim":False,"helix":False,"emacs":False,"micro":False,"code-server":False},"copilot":False,"chat":False}
     rows=[("lang:"+k,v) for k,v in LANGUAGES]
     rows += [("editor:"+k,"Editor — "+v) for k,v in EDITORS]
     rows += [("copilot","GitHub Copilot — authenticate in Neovim after setup"),("chat","CodeCompanion — OpenAI, Anthropic, Gemini/Ollama")]
@@ -32,7 +32,7 @@ def tui(stdscr):
         for i in range(start,min(len(rows),start+visible)):
             ident,label=rows[i]; y=7+i-start
             if ident.startswith("lang:"): mark="[x]" if state["langs"][ident[5:]] else "[ ]"
-            elif ident.startswith("editor:"): mark="(*)" if state["editor"]==ident[7:] else "( )"
+            elif ident.startswith("editor:"): mark="[x]" if state["editors"][ident[7:]] else "[ ]"
             else: mark="[x]" if state[ident] else "[ ]"
             stdscr.addstr(y,4,(mark+" "+label)[:max(0,w-8)],curses.A_REVERSE if i==cursor else curses.A_NORMAL)
         stdscr.addstr(h-2,2,"Enter: Continue  |  q: Cancel"[:max(0,w-3)],curses.A_BOLD)
@@ -42,7 +42,7 @@ def tui(stdscr):
         elif key==ord(" "):
             ident=rows[cursor][0]
             if ident.startswith("lang:"): state["langs"][ident[5:]]=not state["langs"][ident[5:]]
-            elif ident.startswith("editor:"): state["editor"]=ident[7:]
+            elif ident.startswith("editor:"): state["editors"][ident[7:]]=not state["editors"][ident[7:]]
             else: state[ident]=not state[ident]
         elif key in (10,13,curses.KEY_ENTER): return state
         elif key in (ord("q"),27): return None
@@ -54,22 +54,29 @@ def main():
     p=argparse.ArgumentParser()
     for name in ("root","repo","ref","bin-dir"): p.add_argument("--"+name,required=True)
     a=p.parse_args()
-    for tool in ("git","docker","curl"):
+    for tool in ("git","docker","curl","gh"):
         if not shutil.which(tool): raise SystemExit(f"Missing required dependency: {tool}")
-    print("Rust is selected by default. Choose language toolchains and an editor:")
+    if subprocess.run(["gh","--version"],capture_output=True).returncode:
+        raise SystemExit("GitHub CLI (gh) is required. Install it and try again.")
+    print("Rust is selected by default. Select one or more editors (Space toggles each option):")
     state=curses.wrapper(tui)
     if state is None: print("Setup cancelled."); return 1
-    editor=state["editor"]
+    selected_editors=[key for key,_ in EDITORS if state["editors"][key]]
+    if not selected_editors:
+      print("Select at least one editor."); return 1
+    editor=selected_editors[0]
     env={
       "EDITOR_CHOICE":editor,
+      "EDITOR_CHOICES":",".join(selected_editors),
+      "CODE_SERVER_PASSWORD":secrets.token_urlsafe(24) if "code-server" in selected_editors else "",
       "INSTALL_RUST":"1" if state["langs"]["rust"] else "0",
       "INSTALL_CPP":"1" if state["langs"]["cpp"] else "0",
       "INSTALL_PYTHON":"1" if state["langs"]["python"] else "0",
       "INSTALL_NODE":"1" if state["langs"]["node"] else "0",
       "INSTALL_GO":"1" if state["langs"]["go"] else "0",
       "INSTALL_JAVA":"1" if state["langs"]["java"] else "0",
-      "ENABLE_COPILOT":"1" if state["copilot"] and editor=="nvim" else "0",
-      "ENABLE_CODECOMPANION":"1" if state["chat"] and editor=="nvim" else "0",
+      "ENABLE_COPILOT":"1" if state["copilot"] and "nvim" in selected_editors else "0",
+      "ENABLE_CODECOMPANION":"1" if state["chat"] and "nvim" in selected_editors else "0",
       "DEVBOX_UID":str(os.getuid()),"DEVBOX_GID":str(os.getgid()),
     }
     if env["ENABLE_CODECOMPANION"]=="1":
@@ -79,29 +86,17 @@ def main():
     root.mkdir(parents=True,exist_ok=True)
     if src.exists(): shutil.rmtree(src)
     subprocess.run(["git","clone","--filter=blob:none","--sparse","--depth","1","--branch",a.ref,a.repo,str(src)],check=True)
-    subprocess.run(["git","-C",str(src),"sparse-checkout","set","--no-cone","Dockerfile","docker-compose.yml",".zshrc","nvim-config"],check=True)
+    subprocess.run(["git","-C",str(src),"sparse-checkout","set","--no-cone","Dockerfile","docker-compose.yml",".zshrc","nvim-config","devbox.py"],check=True)
     (root/".env").write_text("# Local Devbox configuration. Keep this file private.\n"+"".join(f"{k}={dotenv_quote(v)}\n" for k,v in env.items()),encoding="utf-8")
     (root/".env").chmod(0o600)
     bindir=Path(a.bin_dir).expanduser(); bindir.mkdir(parents=True,exist_ok=True)
+    cli = bindir/"devbox.py"
+    shutil.copy2(src/"devbox.py", cli)
+    cli.chmod(0o755)
     wrapper=bindir/"devbox"
     wrapper.write_text("""#!/usr/bin/env bash
 set -Eeuo pipefail
-ROOT="${DEVBOX_HOME:-$HOME/.local/share/my-dev-environment}"
-COMPOSE="$ROOT/source/docker-compose.yml"
-WORKSPACE="$(pwd -P)"
-ID="$(printf '%s' "$WORKSPACE" | sha256sum | cut -c1-10)"
-PROJECT="devbox-$ID"
-export DEVBOX_WORKSPACE="$WORKSPACE" DEVBOX_CONTAINER_NAME="devbox-$ID"
-dc=(docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT")
-case "${1:-shell}" in
-  up) "${dc[@]}" up -d --build ;;
-  down) "${dc[@]}" down ;;
-  restart) "${dc[@]}" up -d --build --force-recreate ;;
-  status|ps) "${dc[@]}" ps ;;
-  logs) "${dc[@]}" logs -f ;;
-  shell|sh) "${dc[@]}" up -d && "${dc[@]}" exec devenv zsh ;;
-  *) echo "Usage: devbox [shell|up|down|restart|status|logs]"; exit 2 ;;
-esac
+exec python3 "$(dirname "$0")/devbox.py" "$@"
 """,encoding="utf-8")
     wrapper.chmod(0o755)
 

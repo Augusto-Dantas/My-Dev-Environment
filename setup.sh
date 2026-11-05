@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 REPO="Augusto-Dantas/My-Dev-Environment"
-REF="${DEVBOX_REF:-feat/ai-integrations-tui-setup}"
+REF="${DEVBOX_REF:-feat/devbox-project-scaffolding}"
 ROOT="${DEVBOX_HOME:-$HOME/.local/share/my-dev-environment}"
 BIN_DIR="${HOME}/.local/bin"
 mkdir -p "$ROOT" "$BIN_DIR"
