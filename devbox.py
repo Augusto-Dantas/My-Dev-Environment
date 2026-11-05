@@ -263,12 +263,48 @@ def create_project() -> int:
     print(f"Enter the project and run 'devbox' to open its development environment.")
     return 0
 
+
+def uninstall() -> int:
+    launcher = Path.home() / ".local/bin/devbox"
+    cli = Path.home() / ".local/bin/devbox.py"
+    print("This will uninstall the Devbox CLI and remove its local installation files.")
+    print(f"  Installation: {ROOT}")
+    print(f"  User configuration: {CONFIG}")
+    print("Projects and Docker volumes will not be deleted.")
+    print("Docker containers will not be stopped or removed.")
+    if not sys.stdin.isatty():
+        print("Uninstall requires an interactive terminal and explicit confirmation.", file=sys.stderr)
+        return 2
+    confirmation = input("Type UNINSTALL to authorize this operation: ").strip()
+    if confirmation != "UNINSTALL":
+        print("Uninstall cancelled.")
+        return 1
+
+    failures = []
+    for path in (launcher, cli, ROOT, CONFIG):
+        try:
+            if path.is_dir() and not path.is_symlink():
+                shutil.rmtree(path)
+            elif path.exists() or path.is_symlink():
+                path.unlink()
+            print(f"Removed: {path}")
+        except OSError as exc:
+            failures.append((path, exc))
+            print(f"Could not remove {path}: {exc}", file=sys.stderr)
+
+    if failures:
+        print("Uninstall was incomplete. Check file ownership and permissions, then retry.", file=sys.stderr)
+        return 1
+    print("Devbox has been uninstalled. Existing projects, containers, and Docker volumes were preserved.")
+    return 0
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="devbox",
         description="Manage your Docker development environments and scaffold projects.",
         epilog="Run 'devbox new' to create a project with an interactive setup wizard.",
     )
+    parser.add_argument("--uninstall", action="store_true", help="Uninstall Devbox after explicit confirmation")
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("new", help="Create a project using the interactive project wizard")
     sub.add_parser("shell", help="Start the linked container and open Zsh")
@@ -279,6 +315,8 @@ def main() -> int:
     sub.add_parser("logs", help="Follow linked container logs")
     args = parser.parse_args()
 
+    if args.uninstall:
+        return uninstall()
     if args.command == "new":
         return create_project()
     if args.command is None:
