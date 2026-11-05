@@ -104,8 +104,37 @@ case "${1:-shell}" in
 esac
 """,encoding="utf-8")
     wrapper.chmod(0o755)
-    print("\nSetup complete. Add ~/.local/bin to PATH if needed.")
-    print("Change to any project directory and run: devbox")
+
+    path_entry = str(bindir.resolve())
+    print(f"\nWould you like to add {path_entry} to your PATH permanently? [y/N] ", end="", flush=True)
+    answer = input().strip().lower()
+    if answer in ("y", "yes"):
+        shell = Path(os.environ.get("SHELL", "")).name
+        if shell == "zsh":
+            rc = Path.home() / ".zshrc"
+            path_line = f'export PATH="{path_entry}:$PATH"'
+        elif shell == "fish":
+            rc = Path.home() / ".config/fish/config.fish"
+            path_line = f' fish_add_path "{path_entry}"'.lstrip()
+        elif shell == "bash":
+            rc = Path.home() / ".bashrc"
+            path_line = f'export PATH="{path_entry}:$PATH"'
+        else:
+            rc = Path.home() / ".profile"
+            path_line = f'export PATH="{path_entry}:$PATH"'
+        rc.parent.mkdir(parents=True, exist_ok=True)
+        existing = rc.read_text(encoding="utf-8") if rc.exists() else ""
+        if path_line not in existing:
+            with rc.open("a", encoding="utf-8") as config:
+                if existing and not existing.endswith("\\n"):
+                    config.write("\\n")
+                config.write(f"\\n# My Dev Environment CLI\\n{path_line}\\n")
+        print(f"Added {path_entry} to PATH in {rc}.")
+        print("Open a new terminal or reload the shell configuration to use devbox.")
+    else:
+        print("Skipped PATH configuration. You can add ~/.local/bin to PATH later.")
+
+    print("\\nSetup complete. Change to any project directory and run: devbox")
     return 0
 
 if __name__=="__main__":
