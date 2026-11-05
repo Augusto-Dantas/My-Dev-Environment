@@ -82,7 +82,7 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
     git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
     git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
-RUN if [ "$EDITOR_CHOICE" = "nvim" ]; then \
+RUN if echo ",$EDITOR_CHOICES," | grep -q ",nvim,"; then \
       git clone --depth 1 https://github.com/NvChad/starter /home/$USERNAME/.config/nvim && \
       rm -rf /home/$USERNAME/.config/nvim/.git; \
     elif [ "$EDITOR_CHOICE" = "vim" ]; then \
