@@ -8,16 +8,21 @@ services:
     tty: true
     stdin_open: true
     working_dir: /workspace
-    command: /bin/zsh
+    command: ["sleep", "infinity"]
     volumes:
       - ./workspace:/workspace
       - nvim-data-v3:/home/developer/.local/share/nvim
       - nvim-state:/home/developer/.local/state/nvim
       - cargo-cache:/home/developer/.cargo/registry
     environment:
-      - TERM=xterm-256color
-      - COLORTERM=truecolor
-      - SHELL=/bin/zsh
+      TERM: xterm-256color
+      COLORTERM: truecolor
+      SHELL: /bin/zsh
+      ENABLE_COPILOT: ${ENABLE_COPILOT:-0}
+      ENABLE_CODECOMPANION: ${ENABLE_CODECOMPANION:-0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
 
 volumes:
   nvim-data-v3:
