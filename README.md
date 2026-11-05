@@ -10,11 +10,13 @@ Install the following tools on your host:
 - Git
 - curl
 - Python 3
-- GitHub CLI (`gh`)
+- GitHub CLI (`gh`) — [installation instructions](https://github.com/cli/cli#installation)
+
+The installer stops with a clear error if `gh` is missing. Authenticate with `gh auth login` to enable GitHub repository creation and other authenticated GitHub workflows.
 
 ## Install without cloning the full repository
 
-The standalone installer downloads only the setup script first. It then opens an interactive terminal UI (TUI) where you can select the development tools and editor you want.
+The standalone installer downloads only the setup script first. It then opens an interactive terminal UI (TUI) where you can select the development tools and editors you want.
 
 While this feature is under review, run the installer from the feature branch:
 
@@ -127,7 +129,7 @@ The file is created with restricted permissions and is not part of the Git check
 
 ## Change your configuration
 
-Run the installer again to choose a different set of language toolchains, editor, or AI integrations. Then, from the project directory where you want to apply the new image profile, run:
+Run the installer again to choose a different set of language toolchains, editors, or AI integrations. Then, from the project directory where you want to apply the new image profile, run:
 
 ```bash
 devbox restart
