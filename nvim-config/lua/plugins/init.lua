@@ -55,7 +55,22 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
     },
-    opts = {},
+    opts = function()
+      local adapter = "ollama"
+      if vim.env.OPENAI_API_KEY and vim.env.OPENAI_API_KEY ~= "" then
+        adapter = "openai"
+      elseif vim.env.ANTHROPIC_API_KEY and vim.env.ANTHROPIC_API_KEY ~= "" then
+        adapter = "anthropic"
+      elseif vim.env.GEMINI_API_KEY and vim.env.GEMINI_API_KEY ~= "" then
+        adapter = "gemini"
+      end
+      return {
+        strategies = {
+          chat = { adapter = adapter },
+          inline = { adapter = adapter },
+        },
+      }
+    end,
     cmd = { "CodeCompanion", "CodeCompanionChat", "CodeCompanionActions" },
     keys = {
       { "<leader>aa", "<cmd>CodeCompanionActions<cr>", mode = { "n", "v" }, desc = "AI actions" },
