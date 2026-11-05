@@ -39,4 +39,43 @@ return {
     cmd = { "LazyGit", "LazyGitConfig", "LazyGitCurrentFile" },
     dependencies = { "nvim-lua/plenary.nvim" },
   },
+
+  -- GitHub Copilot: run :Copilot auth inside Neovim after the first launch.
+  {
+    "github/copilot.vim",
+    cond = vim.env.ENABLE_COPILOT == "1",
+    event = "InsertEnter",
+  },
+
+  -- Multi-provider chat/inline assistant: OpenAI, Anthropic, Gemini and Ollama.
+  {
+    "olimorris/codecompanion.nvim",
+    cond = vim.env.ENABLE_CODECOMPANION == "1",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    opts = function()
+      local adapter = "ollama"
+      if vim.env.OPENAI_API_KEY and vim.env.OPENAI_API_KEY ~= "" then
+        adapter = "openai"
+      elseif vim.env.ANTHROPIC_API_KEY and vim.env.ANTHROPIC_API_KEY ~= "" then
+        adapter = "anthropic"
+      elseif vim.env.GEMINI_API_KEY and vim.env.GEMINI_API_KEY ~= "" then
+        adapter = "gemini"
+      end
+      return {
+        strategies = {
+          chat = { adapter = adapter },
+          inline = { adapter = adapter },
+        },
+      }
+    end,
+    cmd = { "CodeCompanion", "CodeCompanionChat", "CodeCompanionActions" },
+    keys = {
+      { "<leader>aa", "<cmd>CodeCompanionActions<cr>", mode = { "n", "v" }, desc = "AI actions" },
+      { "<leader>ac", "<cmd>CodeCompanionChat Toggle<cr>", mode = { "n", "v" }, desc = "AI chat" },
+      { "<leader>ai", "<cmd>CodeCompanion<cr>", mode = { "n", "v" }, desc = "AI inline" },
+    },
+  },
 }

@@ -3,23 +3,41 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: devenv
-    hostname: devenv
+      args:
+        USER_UID: ${DEVBOX_UID:-1000}
+        USER_GID: ${DEVBOX_GID:-1000}
+        EDITOR_CHOICE: ${EDITOR_CHOICE:-nvim}
+        INSTALL_RUST: ${INSTALL_RUST:-0}
+        INSTALL_CPP: ${INSTALL_CPP:-0}
+        INSTALL_PYTHON: ${INSTALL_PYTHON:-0}
+        INSTALL_NODE: ${INSTALL_NODE:-0}
+        INSTALL_GO: ${INSTALL_GO:-0}
+        INSTALL_JAVA: ${INSTALL_JAVA:-0}
+    container_name: ${DEVBOX_CONTAINER_NAME:-devenv}
+    hostname: devbox
     tty: true
     stdin_open: true
     working_dir: /workspace
-    command: /bin/zsh
+    command: ["sleep", "infinity"]
     volumes:
-      - ./workspace:/workspace
-      - nvim-data-v3:/home/developer/.local/share/nvim
+      - ${DEVBOX_WORKSPACE:-./workspace}:/workspace
+      - nvim-data:/home/developer/.local/share/nvim
       - nvim-state:/home/developer/.local/state/nvim
       - cargo-cache:/home/developer/.cargo/registry
     environment:
-      - TERM=xterm-256color
-      - COLORTERM=truecolor
-      - SHELL=/bin/zsh
+      TERM: xterm-256color
+      COLORTERM: truecolor
+      SHELL: /bin/zsh
+      ENABLE_COPILOT: ${ENABLE_COPILOT:-0}
+      ENABLE_CODECOMPANION: ${ENABLE_CODECOMPANION:-0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
 
 volumes:
-  nvim-data-v3:
+  nvim-data:
+    name: my-dev-environment-nvim-data
   nvim-state:
+    name: my-dev-environment-nvim-state
   cargo-cache:
+    name: my-dev-environment-cargo-cache

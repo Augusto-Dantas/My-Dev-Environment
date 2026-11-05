@@ -1,0 +1,21 @@
+# Local secrets and generated configuration
+.env
+.env.*
+!.env.example
+
+# Workspace and local development state
+workspace/
+*.swp
+*.swo
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+ENV/
+
+# Editor / OS
+.vscode/
+.idea/
