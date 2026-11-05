@@ -3,8 +3,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: devenv
-    hostname: devenv
+      args:
+        EDITOR_CHOICE: ${EDITOR_CHOICE:-nvim}
+        INSTALL_RUST: ${INSTALL_RUST:-0}
+        INSTALL_CPP: ${INSTALL_CPP:-0}
+        INSTALL_PYTHON: ${INSTALL_PYTHON:-0}
+        INSTALL_NODE: ${INSTALL_NODE:-0}
+        INSTALL_GO: ${INSTALL_GO:-0}
+        INSTALL_JAVA: ${INSTALL_JAVA:-0}
+    container_name: ${DEVBOX_CONTAINER_NAME:-devenv}
+    hostname: devbox
     tty: true
     stdin_open: true
     working_dir: /workspace
@@ -12,8 +20,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./workspace:/workspace
-      - nvim-data-v3:/home/developer/.local/share/nvim
+      - ${DEVBOX_WORKSPACE:-./workspace}:/workspace
+      - nvim-data:/home/developer/.local/share/nvim
       - nvim-state:/home/developer/.local/state/nvim
       - cargo-cache:/home/developer/.cargo/registry
     environment:
@@ -22,6 +30,9 @@ services:
       SHELL: /bin/zsh
 
 volumes:
-  nvim-data-v3:
+  nvim-data:
+    name: my-dev-environment-nvim-data
   nvim-state:
+    name: my-dev-environment-nvim-state
   cargo-cache:
+    name: my-dev-environment-cargo-cache
