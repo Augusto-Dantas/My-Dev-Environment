@@ -79,29 +79,17 @@ def main():
     root.mkdir(parents=True,exist_ok=True)
     if src.exists(): shutil.rmtree(src)
     subprocess.run(["git","clone","--filter=blob:none","--sparse","--depth","1","--branch",a.ref,a.repo,str(src)],check=True)
-    subprocess.run(["git","-C",str(src),"sparse-checkout","set","--no-cone","Dockerfile","docker-compose.yml",".zshrc","nvim-config"],check=True)
+    subprocess.run(["git","-C",str(src),"sparse-checkout","set","--no-cone","Dockerfile","docker-compose.yml",".zshrc","nvim-config","devbox.py"],check=True)
     (root/".env").write_text("# Local Devbox configuration. Keep this file private.\n"+"".join(f"{k}={dotenv_quote(v)}\n" for k,v in env.items()),encoding="utf-8")
     (root/".env").chmod(0o600)
     bindir=Path(a.bin_dir).expanduser(); bindir.mkdir(parents=True,exist_ok=True)
+    cli = bindir/"devbox.py"
+    shutil.copy2(src/"devbox.py", cli)
+    cli.chmod(0o755)
     wrapper=bindir/"devbox"
     wrapper.write_text("""#!/usr/bin/env bash
 set -Eeuo pipefail
-ROOT="${DEVBOX_HOME:-$HOME/.local/share/my-dev-environment}"
-COMPOSE="$ROOT/source/docker-compose.yml"
-WORKSPACE="$(pwd -P)"
-ID="$(printf '%s' "$WORKSPACE" | sha256sum | cut -c1-10)"
-PROJECT="devbox-$ID"
-export DEVBOX_WORKSPACE="$WORKSPACE" DEVBOX_CONTAINER_NAME="devbox-$ID"
-dc=(docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT")
-case "${1:-shell}" in
-  up) "${dc[@]}" up -d --build ;;
-  down) "${dc[@]}" down ;;
-  restart) "${dc[@]}" up -d --build --force-recreate ;;
-  status|ps) "${dc[@]}" ps ;;
-  logs) "${dc[@]}" logs -f ;;
-  shell|sh) "${dc[@]}" up -d && "${dc[@]}" exec devenv zsh ;;
-  *) echo "Usage: devbox [shell|up|down|restart|status|logs]"; exit 2 ;;
-esac
+exec python3 "$HOME/.local/bin/devbox.py" "$@"
 """,encoding="utf-8")
     wrapper.chmod(0o755)
 
