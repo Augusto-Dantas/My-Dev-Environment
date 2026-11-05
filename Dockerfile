@@ -15,6 +15,7 @@ ARG NVIM_VERSION=stable
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
+    EDITOR=${EDITOR_CHOICE} \
     SHELL=/bin/zsh
 
 RUN set -eux; \
@@ -79,6 +80,11 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 RUN if [ "$EDITOR_CHOICE" = "nvim" ]; then \
       git clone --depth 1 https://github.com/NvChad/starter /home/$USERNAME/.config/nvim && \
       rm -rf /home/$USERNAME/.config/nvim/.git; \
+    elif [ "$EDITOR_CHOICE" = "vim" ]; then \
+      printf 'set number\nsyntax on\nset expandtab\nset shiftwidth=4\nset tabstop=4\n' > /home/$USERNAME/.vimrc; \
+    elif [ "$EDITOR_CHOICE" = "helix" ]; then \
+      mkdir -p /home/$USERNAME/.config/helix && \
+      printf 'theme = "onedark"\n[editor]\nline-number = "relative"\nmouse = true\n[editor.cursor-shape]\ninsert = "bar"\n' > /home/$USERNAME/.config/helix/config.toml; \
     fi
 
 COPY --chown=$USERNAME:$USERNAME ./nvim-config/ /home/$USERNAME/.config/nvim/
