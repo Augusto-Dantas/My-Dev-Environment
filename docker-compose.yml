@@ -7,6 +7,7 @@ services:
         USER_UID: ${DEVBOX_UID:-1000}
         USER_GID: ${DEVBOX_GID:-1000}
         EDITOR_CHOICE: ${EDITOR_CHOICE:-nvim}
+        EDITOR_CHOICES: ${EDITOR_CHOICES:-nvim}
         INSTALL_RUST: ${INSTALL_RUST:-0}
         INSTALL_CPP: ${INSTALL_CPP:-0}
         INSTALL_PYTHON: ${INSTALL_PYTHON:-0}
@@ -15,6 +16,8 @@ services:
         INSTALL_JAVA: ${INSTALL_JAVA:-0}
     container_name: ${DEVBOX_CONTAINER_NAME:-devenv}
     hostname: devbox
+    ports:
+      - "127.0.0.1:8080:8080"
     tty: true
     stdin_open: true
     working_dir: /workspace
@@ -33,6 +36,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CODE_SERVER_PASSWORD: ${CODE_SERVER_PASSWORD:-}
 
 volumes:
   nvim-data:
