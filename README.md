@@ -18,7 +18,7 @@ The standalone installer downloads only the setup script first. It then opens an
 While this feature is under review, run the installer from the feature branch:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/feat/ai-integrations-tui-setup/setup.sh -o /tmp/devbox-setup.sh
+curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/main/setup.sh -o /tmp/devbox-setup.sh
 bash /tmp/devbox-setup.sh
 ```
 
@@ -71,12 +71,28 @@ The current host directory is mounted into the container at `/workspace`. Each h
 
 | Command | Description |
 | --- | --- |
-| `devbox` or `devbox shell` | Start the environment and open a Zsh shell |
-| `devbox up` | Build (if needed) and start the container in the background |
-| `devbox status` | Show the container status |
-| `devbox logs` | Follow container logs |
-| `devbox restart` | Rebuild and restart the container |
-| `devbox down` | Stop and remove the container for the current directory |
+| `devbox --help` | Show all commands and usage information |
+| `devbox` or `devbox shell` | Start the linked environment and open a Zsh shell |
+| `devbox new` | Create a project with an interactive setup wizard |
+| `devbox up` | Build (if needed) and start the linked container in the background |
+| `devbox status` | Show the linked container status |
+| `devbox logs` | Follow linked container logs |
+| `devbox restart` | Rebuild and restart the linked container |
+| `devbox down` | Stop and remove the linked container |
+
+### Create a project
+
+Run:
+
+```bash
+devbox new
+```
+
+The interactive wizard asks for the project name and language profile, whether to initialize Git, create a README, generate a language-appropriate `.gitignore`, and add an MIT license. You can also create a GitHub repository through the GitHub CLI (`gh`) if it is installed and authenticated.
+
+Choose an existing registered development container or create a new one with a custom name. Projects linked to an existing container are created under that container's workspace directory. Container and project mappings are stored in your user configuration directory, not inside the generated project.
+
+Use `devbox --help` at any time to see the available commands.
 
 ## AI coding assistants
 
