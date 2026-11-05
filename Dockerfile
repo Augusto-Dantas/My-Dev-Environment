@@ -44,7 +44,7 @@ RUN if [ "$INSTALL_GO" = "1" ]; then \
       apt-get update && apt-get install -y --no-install-recommends golang-go && rm -rf /var/lib/apt/lists/*; \
     fi
 
-RUN if [ "$EDITOR_CHOICE" = "nvim" ]; then \
+RUN if echo ",$EDITOR_CHOICES," | grep -q ",nvim,"; then \
       ARCH=$(dpkg --print-architecture); \
       if [ "$ARCH" = "arm64" ]; then NVIM_ARCH="arm64"; else NVIM_ARCH="x86_64"; fi; \
       curl -fsSL "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-${NVIM_ARCH}.tar.gz" -o /tmp/nvim.tar.gz; \
