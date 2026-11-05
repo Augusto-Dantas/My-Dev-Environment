@@ -89,7 +89,7 @@ Run:
 devbox new
 ```
 
-The interactive wizard asks for the project name and language profile, whether to initialize Git, create a README, generate a language-appropriate `.gitignore`, and add an MIT license. You can also create a GitHub repository through the GitHub CLI (`gh`) if it is installed and authenticated.
+The interactive wizard asks for the project name and language profile, whether to initialize Git, create a README, generate a language-appropriate `.gitignore`, and add a license. Licenses are retrieved from GitHub through `gh repo license view` (MIT, Apache-2.0, GPL-3.0, BSD-3-Clause, or MPL-2.0); install the GitHub CLI to enable this option. You can also create a GitHub repository through `gh` if it is installed and authenticated.
 
 Choose an existing registered development container or create a new one with a custom name. Projects linked to an existing container are created under that container's workspace directory. Container and project mappings are stored in your user configuration directory, not inside the generated project.
 
