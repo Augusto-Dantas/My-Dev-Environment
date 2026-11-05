@@ -1,78 +1,65 @@
 #!/usr/bin/env python3
-"""Standalone installer: only sparse-checkouts the files required to build the image."""
+"""Standalone installer: sparse-checkout only the files required for the image."""
 from __future__ import annotations
-import argparse
-import curses
-import getpass
-import os
-import shutil
-import subprocess
+import argparse, curses, getpass, os, shutil, subprocess
 from pathlib import Path
 
 LANGUAGES = [
-    ("rust", "Rust", "rustup, cargo, rust-analyzer, clippy, rustfmt"),
-    ("cpp", "C / C++", "GCC, Clang, GDB, CMake, Ninja, clangd, clang-format"),
-    ("python", "Python", "Python 3, pip, venv, headers"),
-    ("node", "Node.js / TypeScript", "Node.js 22 and npm"),
-    ("go", "Go", "Go compiler and standard tools"),
-    ("java", "Java", "OpenJDK 17"),
+    ("rust", "Rust — rustup, Cargo, rust-analyzer, Clippy, rustfmt"),
+    ("cpp", "C/C++ — GCC, Clang, GDB, CMake, Ninja, clangd"),
+    ("python", "Python — Python 3, pip, venv, headers"),
+    ("node", "Node.js/TypeScript — Node 22 and npm"),
+    ("go", "Go — compiler and standard tools"),
+    ("java", "Java — OpenJDK 17"),
 ]
 EDITORS = [("nvim", "Neovim + NvChad"), ("vim", "Vim"), ("helix", "Helix"), ("none", "Sem editor")]
 
 def tui(stdscr):
-    curses.curs_set(0)
-    stdscr.keypad(True)
-    state = {"langs": {x[0]: x[0] == "rust" for x in LANGUAGES}, "editor": 0, "copilot": False, "chat": False}
-    rows = [("lang:" + x[0], x[1], x[2]) for x in LANGUAGES]
-    rows += [("editor:" + x[0], "Editor: " + x[1], "Seleciona o editor principal do container") for x in EDITORS]
-    rows += [("copilot", "GitHub Copilot", "Autenticação posterior pelo Neovim"), ("chat", "CodeCompanion", "OpenAI, Anthropic, Gemini ou Ollama")]
-    cursor = 0
+    curses.curs_set(0); stdscr.keypad(True)
+    state={"langs":{x[0]:x[0]=="rust" for x in LANGUAGES},"editor":"nvim","copilot":False,"chat":False}
+    rows=[("lang:"+k,v) for k,v in LANGUAGES]
+    rows += [("editor:"+k,"Editor — "+v) for k,v in EDITORS]
+    rows += [("copilot","GitHub Copilot — autenticação posterior no Neovim"),("chat","CodeCompanion — OpenAI, Anthropic, Gemini/Ollama")]
+    cursor=0
     while True:
-        stdscr.erase()
-        h, w = stdscr.getmaxyx()
-        title = " MY DEV ENVIRONMENT — INSTALADOR "
-        stdscr.addstr(1, max(0, (w-len(title))//2), title[:max(0,w-1)], curses.A_BOLD)
-        stdscr.addstr(3, 2, "↑/↓ navegar · Espaço selecionar · Enter confirmar · q cancelar"[:max(0,w-3)])
-        stdscr.addstr(5, 3, "PACOTES DE DESENVOLVIMENTO", curses.A_UNDERLINE)
-        for i, (key, label, desc) in enumerate(rows):
-            y = 7 + i*2
-            if y >= h-3: break
-            if key.startswith("lang:"):
-                mark = "[x]" if state["langs"][key[5:]] else "[ ]"
-            elif key.startswith("editor:"):
-                mark = "(*)" if EDITORS[state["editor"]][0] == key[7:] else "( )"
-            else:
-                mark = "[x]" if state[key] else "[ ]"
-            stdscr.addstr(y, 4, f"{mark} {label}"[:max(0,w-8)], curses.A_REVERSE if i == cursor else curses.A_NORMAL)
-            if y+1 < h-2:
-                stdscr.addstr(y+1, 8, desc[:max(0,w-12)], curses.A_DIM)
-        stdscr.refresh()
-        key = stdscr.getch()
-        if key in (curses.KEY_UP, ord("k")): cursor = (cursor-1) % len(rows)
-        elif key in (curses.KEY_DOWN, ord("j")): cursor = (cursor+1) % len(rows)
-        elif key == ord(" "):
-            ident = rows[cursor][0]
-            if ident.startswith("lang:"):
-                name = ident[5:]; state["langs"][name] = not state["langs"][name]
-            elif ident.startswith("editor:"):
-                state["editor"] = next(i for i,x in enumerate(EDITORS) if x[0] == ident[7:])
-            else: state[ident] = not state[ident]
+        stdscr.erase(); h,w=stdscr.getmaxyx()
+        title=" MY DEV ENVIRONMENT · INSTALADOR "
+        stdscr.addstr(1,max(0,(w-len(title))//2),title[:max(0,w-1)],curses.A_BOLD)
+        stdscr.addstr(3,2,"↑/↓ navegar · Espaço selecionar · Enter confirmar · q cancelar"[:max(0,w-3)])
+        stdscr.addstr(5,3,"PACOTES E EDITOR",curses.A_UNDERLINE)
+        visible=max(1,h-9)
+        start=max(0,min(cursor-visible+1,len(rows)-visible))
+        for i in range(start,min(len(rows),start+visible)):
+            ident,label=rows[i]; y=7+i-start
+            if ident.startswith("lang:"): mark="[x]" if state["langs"][ident[5:]] else "[ ]"
+            elif ident.startswith("editor:"): mark="(*)" if state["editor"]==ident[7:] else "( )"
+            else: mark="[x]" if state[ident] else "[ ]"
+            stdscr.addstr(y,4,(mark+" "+label)[:max(0,w-8)],curses.A_REVERSE if i==cursor else curses.A_NORMAL)
+        stdscr.addstr(h-2,2,"Enter: continuar  |  q: cancelar"[:max(0,w-3)],curses.A_BOLD)
+        stdscr.refresh(); key=stdscr.getch()
+        if key in (curses.KEY_UP,ord("k")): cursor=(cursor-1)%len(rows)
+        elif key in (curses.KEY_DOWN,ord("j")): cursor=(cursor+1)%len(rows)
+        elif key==ord(" "):
+            ident=rows[cursor][0]
+            if ident.startswith("lang:"): state["langs"][ident[5:]]=not state["langs"][ident[5:]]
+            elif ident.startswith("editor:"): state["editor"]=ident[7:]
+            else: state[ident]=not state[ident]
         elif key in (10,13,curses.KEY_ENTER): return state
         elif key in (ord("q"),27): return None
 
-def quote(value):
-    return '"' + value.replace('\\','\\\\').replace('"','\\"').replace('$','\\$').replace('`','\\`') + '"'
+def dotenv_quote(v):
+    return "'" + v.replace("\\","\\\\").replace("'","\\'") + "'"
 
 def main():
     p=argparse.ArgumentParser()
-    p.add_argument("--root",required=True); p.add_argument("--repo",required=True); p.add_argument("--ref",required=True); p.add_argument("--bin-dir",required=True)
-    a=p.parse_args(); root=Path(a.root).expanduser(); src=root/"source"
-    if not shutil.which("git") or not shutil.which("docker") or not shutil.which("curl"):
-        raise SystemExit("Instale Git, Docker Compose v2 e curl antes de continuar.")
-    print("Selecione os pacotes e o editor. O Rust vem pré-selecionado como exemplo.")
+    for name in ("root","repo","ref","bin-dir"): p.add_argument("--"+name,required=True)
+    a=p.parse_args()
+    for tool in ("git","docker","curl"):
+        if not shutil.which(tool): raise SystemExit(f"Dependência ausente: {tool}")
+    print("Rust vem pré-selecionado. Escolha pacotes e editor:")
     state=curses.wrapper(tui)
     if state is None: print("Instalação cancelada."); return 1
-    editor=EDITORS[state["editor"]][0]
+    editor=state["editor"]
     env={
       "EDITOR_CHOICE":editor,
       "INSTALL_RUST":"1" if state["langs"]["rust"] else "0",
@@ -83,21 +70,20 @@ def main():
       "INSTALL_JAVA":"1" if state["langs"]["java"] else "0",
       "ENABLE_COPILOT":"1" if state["copilot"] and editor=="nvim" else "0",
       "ENABLE_CODECOMPANION":"1" if state["chat"] and editor=="nvim" else "0",
+      "DEVBOX_UID":str(os.getuid()),"DEVBOX_GID":str(os.getgid()),
     }
-    secrets={}
     if env["ENABLE_CODECOMPANION"]=="1":
-      for key,label in [("OPENAI_API_KEY","OpenAI"),("ANTHROPIC_API_KEY","Anthropic"),("GEMINI_API_KEY","Gemini")]:
-        secrets[key]=getpass.getpass(f"{label} API key (Enter para ignorar): ")
-    env.update(secrets)
+      for key,label in (("OPENAI_API_KEY","OpenAI"),("ANTHROPIC_API_KEY","Anthropic"),("GEMINI_API_KEY","Gemini")):
+        env[key]=getpass.getpass(label+" API key (Enter para ignorar): ")
+    root=Path(a.root).expanduser(); src=root/"source"
     root.mkdir(parents=True,exist_ok=True)
     if src.exists(): shutil.rmtree(src)
     subprocess.run(["git","clone","--filter=blob:none","--sparse","--depth","1","--branch",a.ref,a.repo,str(src)],check=True)
     subprocess.run(["git","-C",str(src),"sparse-checkout","set","Dockerfile","docker-compose.yml",".zshrc","nvim-config"],check=True)
-    envfile=root/".env"
-    envfile.write_text("# Gerado pelo instalador. Contém apenas configurações locais.\n"+"".join(f"{k}={quote(v)}\n" for k,v in env.items()),encoding="utf-8")
-    envfile.chmod(0o600)
-    bin_dir=Path(a.bin_dir).expanduser(); bin_dir.mkdir(parents=True,exist_ok=True)
-    wrapper=bin_dir/"devbox"
+    (root/".env").write_text("# Configuração local do Devbox. Não compartilhar.\n"+"".join(f"{k}={dotenv_quote(v)}\n" for k,v in env.items()),encoding="utf-8")
+    (root/".env").chmod(0o600)
+    bindir=Path(a.bin_dir).expanduser(); bindir.mkdir(parents=True,exist_ok=True)
+    wrapper=bindir/"devbox"
     wrapper.write_text("""#!/usr/bin/env bash
 set -Eeuo pipefail
 ROOT="${DEVBOX_HOME:-$HOME/.local/share/my-dev-environment}"
@@ -106,22 +92,20 @@ WORKSPACE="$(pwd -P)"
 ID="$(printf '%s' "$WORKSPACE" | sha256sum | cut -c1-10)"
 PROJECT="devbox-$ID"
 export DEVBOX_WORKSPACE="$WORKSPACE" DEVBOX_CONTAINER_NAME="devbox-$ID"
+dc=(docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT")
 case "${1:-shell}" in
-  up) docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT" up -d --build ;;
-  down) docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT" down ;;
-  restart) docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT" up -d --build --force-recreate ;;
-  status|ps) docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT" ps ;;
-  logs) docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT" logs -f ;;
-  shell|sh) docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT" up -d && docker compose --env-file "$ROOT/.env" -f "$COMPOSE" --project-directory "$ROOT/source" -p "$PROJECT" exec devenv zsh ;;
+  up) "${dc[@]}" up -d --build ;;
+  down) "${dc[@]}" down ;;
+  restart) "${dc[@]}" up -d --build --force-recreate ;;
+  status|ps) "${dc[@]}" ps ;;
+  logs) "${dc[@]}" logs -f ;;
+  shell|sh) "${dc[@]}" up -d && "${dc[@]}" exec devenv zsh ;;
   *) echo "Uso: devbox [shell|up|down|restart|status|logs]"; exit 2 ;;
 esac
 """,encoding="utf-8")
     wrapper.chmod(0o755)
-    print("\nInstalação configurada. O build será feito na primeira execução do devbox.")
-    print(f"Comando instalado em: {wrapper}")
-    if str(bin_dir) not in os.environ.get("PATH","").split(os.pathsep):
-      print(f"Adicione ao PATH: export PATH=\"{bin_dir}:$PATH\"")
-    print("Entre em qualquer diretório e execute: devbox")
+    print("\nInstalação pronta. Adicione ~/.local/bin ao PATH se necessário.")
+    print("Entre em qualquer diretório de projeto e execute: devbox")
     return 0
 
 if __name__=="__main__": raise SystemExit(main())
