@@ -1,55 +1,51 @@
 # My-Dev-Environment
 
-Container de desenvolvimento configurável com Docker, Zsh, pacotes por linguagem, editor selecionável e integrações opcionais de IA.
+Ambiente de desenvolvimento Docker configurável: linguagens, toolchains, editor e integrações de IA.
 
-## Instalação sem clonar o repositório completo
+## Instalar sem clonar o repositório completo
 
 Requisitos no host: Docker Engine/Desktop com Compose v2, Git, curl e Python 3.
 
-Baixe e execute somente o instalador:
+Enquanto a implementação estiver em revisão, use a branch de desenvolvimento:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/main/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/feat/ai-integrations-tui-setup/setup.sh | bash
 ```
 
-O instalador abre uma TUI para escolher:
-- Pacotes de linguagem: Rust, C/C++, Python, Node.js/TypeScript, Go e Java.
-- Editor: Neovim + NvChad, Vim, Helix ou nenhum.
-- Integrações opcionais: GitHub Copilot e CodeCompanion (OpenAI, Anthropic, Gemini ou Ollama).
+O instalador é independente e baixa somente o script Python. A TUI permite selecionar:
+- Rust (rustup, Cargo, rust-analyzer, Clippy e rustfmt)
+- C/C++ (GCC, Clang, GDB, CMake, Ninja, clangd e clang-format)
+- Python, Node.js/TypeScript, Go e Java
+- Editor: Neovim + NvChad, Vim, Helix ou nenhum
+- GitHub Copilot e CodeCompanion (opcionais; apenas com Neovim)
 
-Por baixo, o instalador faz um *sparse checkout* apenas de `Dockerfile`, `docker-compose.yml`, `.zshrc` e `nvim-config/`. Não baixa o histórico nem o conteúdo desnecessário do repositório. A imagem Docker é construída sob demanda na primeira execução.
+Depois das escolhas, ele faz *sparse checkout* de apenas Dockerfile, Compose, zshrc e configuração do Neovim. O histórico e arquivos não usados não são baixados. A imagem só é construída na primeira execução do comando global.
 
-## Usar o container em qualquer diretório
+## Usar em qualquer diretório do host
 
-Depois da instalação, adicione `~/.local/bin` ao PATH (o instalador informa o comando caso necessário). Acesse qualquer pasta de projeto no host e execute:
+O instalador cria `~/.local/bin/devbox`. Se necessário, adicione ao PATH:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Agora, de qualquer diretório:
 
 ```bash
 cd ~/projetos/meu-projeto
 devbox
 ```
 
-O diretório atual é montado em `/workspace` dentro do container. Cada diretório do host recebe um ambiente Compose próprio, então você pode abrir projetos diferentes sem trocar manualmente o diretório de instalação.
+O diretório atual é montado no container como `/workspace`. Cada caminho recebe um container separado, e o usuário do container usa o UID/GID do host para reduzir problemas de permissão nos arquivos montados.
 
-Comandos:
-- `devbox` ou `devbox shell`: iniciar e entrar no ambiente.
-- `devbox up`: iniciar em segundo plano.
-- `devbox status`: ver o estado.
-- `devbox logs`: acompanhar logs.
-- `devbox down`: parar/remover o container daquele diretório.
-- `devbox restart`: reconstruir e reiniciar.
+Comandos: `devbox up`, `devbox shell`, `devbox status`, `devbox logs`, `devbox restart`, `devbox down`.
 
-## Rust
+## IA
 
-Ao selecionar Rust, a imagem instala rustup com toolchain stable, Cargo, rust-analyzer, Clippy e rustfmt. O cache do Cargo é persistido entre execuções.
-
-## Editores e IA
-
-Copilot e CodeCompanion são habilitados apenas quando Neovim for selecionado. No primeiro uso do Copilot, rode `:Copilot auth`. As chaves de provedores de IA são opcionais e ficam em `~/.local/share/my-dev-environment/.env`, com permissão restrita; nunca são adicionadas ao repositório.
+Copilot: autentique no Neovim com `:Copilot auth`. CodeCompanion oferece chat e ações para provedores OpenAI, Anthropic, Gemini e Ollama. Chaves opcionais ficam no arquivo privado `~/.local/share/my-dev-environment/.env`.
 
 ## Reconfigurar
 
-Execute novamente o instalador para selecionar outro conjunto de pacotes/editor. A imagem será reconstruída quando executar `devbox restart` ou `devbox` após atualização da configuração.
+Execute novamente o instalador e depois `devbox restart` no diretório do projeto para reconstruir a imagem com o novo perfil.
 
-## Segurança
-
-Não compartilhe o arquivo local `.env`. Revogue imediatamente qualquer chave que tenha sido exposta.
+Nunca compartilhe o arquivo local de credenciais.
