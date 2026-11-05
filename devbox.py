@@ -142,6 +142,15 @@ def compose(profile: dict, workspace: Path, command: list[str]) -> int:
         return subprocess.call(args + ["ps"], env=env)
     if action == "logs":
         return subprocess.call(args + ["logs", "-f"], env=env)
+    if action == "gui":
+        code = subprocess.call(args + ["up", "-d", "--build"], env=env)
+        if code:
+            return code
+        result = subprocess.call(args + ["exec", "-d", "devenv", "sh", "-lc", "code-server --bind-addr 0.0.0.0:8080 --auth password /workspace"], env=env)
+        if result == 0:
+            print("Open the graphical editor at http://localhost:8080")
+            print("The access password is stored in the Devbox .env file.")
+        return result
     if action in ("shell", "sh"):
         code = subprocess.call(args + ["up", "-d", "--build"], env=env)
         if code:
@@ -318,6 +327,7 @@ def main() -> int:
     sub.add_parser("restart", help="Rebuild and restart the linked container")
     sub.add_parser("status", aliases=["ps"], help="Show the linked container status")
     sub.add_parser("logs", help="Follow linked container logs")
+    sub.add_parser("gui", help="Start the browser-based graphical editor (code-server)")
     args = parser.parse_args()
 
     if args.uninstall:
