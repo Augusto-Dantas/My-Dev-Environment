@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd "$ROOT"
-exec python3 setup.py
+REPO="Augusto-Dantas/My-Dev-Environment"
+REF="${DEVBOX_REF:-main}"
+ROOT="${DEVBOX_HOME:-$HOME/.local/share/my-dev-environment}"
+BIN_DIR="${HOME}/.local/bin"
+mkdir -p "$ROOT" "$BIN_DIR"
+TMP="$(mktemp)"
+trap 'rm -f "$TMP"' EXIT
+URL="https://raw.githubusercontent.com/$REPO/$REF/setup.py"
+command -v python3 >/dev/null || { echo "Python 3 é necessário para executar a TUI." >&2; exit 1; }
+curl -fsSL "$URL" -o "$TMP"
+exec python3 "$TMP" --root "$ROOT" --repo "https://github.com/$REPO.git" --ref "$REF" --bin-dir "$BIN_DIR"
