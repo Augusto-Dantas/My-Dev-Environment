@@ -265,8 +265,8 @@ def create_project() -> int:
 
 
 def uninstall() -> int:
-    launcher = Path.home() / ".local/bin/devbox"
-    cli = Path.home() / ".local/bin/devbox.py"
+    cli = Path(__file__).resolve()
+    launcher = cli.with_name("devbox")
     print("This will uninstall the Devbox CLI and remove its local installation files.")
     print(f"  Installation: {ROOT}")
     print(f"  User configuration: {CONFIG}")
