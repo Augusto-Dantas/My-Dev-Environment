@@ -10,6 +10,7 @@ Install the following tools on your host:
 - Git
 - curl
 - Python 3
+- GitHub CLI (`gh`)
 
 ## Install without cloning the full repository
 
@@ -33,14 +34,18 @@ The TUI lets you choose from these language toolchains:
 | Go | Go compiler and standard tools |
 | Java | OpenJDK 17 |
 
-You can also select one editor:
+You can select **multiple editors** in the setup TUI (press Space to toggle each option):
 
 - **Neovim + NvChad**
 - **Vim**
 - **Helix**
-- **No editor**
+- **Emacs (terminal)**
+- **Micro (terminal)**
+- **VS Code in your browser (code-server)**
 
-GitHub Copilot and CodeCompanion are optional integrations available when Neovim is selected.
+At least one editor must be selected. The first selected editor becomes the default for `$EDITOR`. The code-server option provides a graphical VS Code-like interface in your browser, bound to `localhost:8080`; its generated password is stored in the private Devbox `.env` file.
+
+GitHub Copilot and CodeCompanion are optional integrations available when Neovim is selected. The installer requires `gh` on the host for GitHub-backed license and repository workflows.
 
 After you confirm your choices, the installer performs a Git sparse checkout of only the files required to build the image: the Dockerfile, Compose file, Zsh configuration, and Neovim configuration. It does not download the full repository history or unrelated files. The Docker image is built on the first `devbox` invocation.
 
@@ -78,6 +83,7 @@ The current host directory is mounted into the container at `/workspace`. Each h
 | `devbox up` | Build (if needed) and start the linked container in the background |
 | `devbox status` | Show the linked container status |
 | `devbox logs` | Follow linked container logs |
+| `devbox gui` | Start the browser-based graphical editor (code-server) |
 | `devbox restart` | Rebuild and restart the linked container |
 | `devbox down` | Stop and remove the linked container |
 
@@ -89,7 +95,7 @@ Run:
 devbox new
 ```
 
-The interactive wizard asks for the project name and language profile, whether to initialize Git, create a README, generate a language-appropriate `.gitignore`, and add a license. Licenses are retrieved from GitHub through `gh repo license view` (MIT, Apache-2.0, GPL-3.0, BSD-3-Clause, or MPL-2.0); install the GitHub CLI to enable this option. You can also create a GitHub repository through `gh` if it is installed and authenticated.
+The interactive wizard asks for the project name and language profile, whether to initialize Git, create a README, generate a language-appropriate `.gitignore`, and add a license. Licenses are retrieved from GitHub through `gh repo license view` (MIT, Apache-2.0, GPL-3.0, BSD-3-Clause, or MPL-2.0); The GitHub CLI (`gh`) is a required host dependency for these workflows. You can also create a GitHub repository through `gh` if it is installed and authenticated.
 
 Choose an existing registered development container or create a new one with a custom name. Projects linked to an existing container are created under that container's workspace directory. Container and project mappings are stored in your user configuration directory, not inside the generated project.
 
