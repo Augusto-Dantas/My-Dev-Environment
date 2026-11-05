@@ -80,7 +80,7 @@ def main():
     if src.exists(): shutil.rmtree(src)
     subprocess.run(["git","clone","--filter=blob:none","--sparse","--depth","1","--branch",a.ref,a.repo,str(src)],check=True)
     subprocess.run(["git","-C",str(src),"sparse-checkout","set","--no-cone","Dockerfile","docker-compose.yml",".zshrc","nvim-config"],check=True)
-    (root/".env").write_text("# Configuração local do Devbox. Não compartilhar.\n"+"".join(f"{k}={dotenv_quote(v)}\n" for k,v in env.items()),encoding="utf-8")
+    (root/".env").write_text("# Local Devbox configuration. Keep this file private.\n"+"".join(f"{k}={dotenv_quote(v)}\n" for k,v in env.items()),encoding="utf-8")
     (root/".env").chmod(0o600)
     bindir=Path(a.bin_dir).expanduser(); bindir.mkdir(parents=True,exist_ok=True)
     wrapper=bindir/"devbox"
@@ -104,7 +104,7 @@ case "${1:-shell}" in
 esac
 """,encoding="utf-8")
     wrapper.chmod(0o755)
-    print("\nInstalação pronta. Adicione ~/.local/bin ao PATH se necessário.")
+    print("\nSetup complete. Add ~/.local/bin to PATH if needed.")
     print("Change to any project directory and run: devbox")
     return 0
 
