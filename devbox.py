@@ -86,7 +86,12 @@ def registered_containers() -> list[dict]:
     return result
 
 def project_config(directory: Path) -> dict | None:
-    return load_json(CONFIG / "projects" / f"{key_for(str(directory.resolve()))}.json")
+    current = directory.resolve()
+    for candidate in (current, *current.parents):
+        config = load_json(CONFIG / "projects" / f"{key_for(str(candidate))}.json")
+        if config:
+            return config
+    return None
 
 def compose(profile: dict, workspace: Path, command: list[str]) -> int:
     if not COMPOSE.exists() or not ENV_FILE.exists():
