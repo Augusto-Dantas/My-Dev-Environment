@@ -21,7 +21,7 @@ The standalone installer downloads only the setup script first. It then opens an
 While this feature is under review, run the installer from the feature branch:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/devbox-setup.sh
+curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/setup.sh
 bash /tmp/devbox-setup.sh
 ```
 
