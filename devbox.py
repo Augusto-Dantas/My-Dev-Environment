@@ -77,12 +77,49 @@ def load_json(path: Path) -> dict | None:
 
 def registered_containers() -> list[dict]:
     result = []
+    known_names = set()
     folder = CONFIG / "containers"
     if folder.exists():
         for file in sorted(folder.glob("*.json")):
             data = load_json(file)
             if data and data.get("name") and data.get("workspace_root"):
                 result.append(data)
+                known_names.add(data["name"])
+
+    # Also discover containers created by earlier devbox versions.
+    try:
+        listed = subprocess.run(
+            ["docker", "ps", "-aq", "--filter", "name=devbox"],
+            capture_output=True, text=True, check=False,
+        )
+        for container_id in listed.stdout.split():
+            inspected = subprocess.run(
+                ["docker", "inspect", container_id],
+                capture_output=True, text=True, check=False,
+            )
+            if inspected.returncode:
+                continue
+            details = json.loads(inspected.stdout)[0]
+            labels = details.get("Config", {}).get("Labels") or {}
+            if labels.get("com.docker.compose.service") != "devenv":
+                continue
+            mount = next(
+                (item for item in details.get("Mounts", []) if item.get("Destination") == "/workspace"),
+                None,
+            )
+            name = details.get("Name", "").lstrip("/")
+            project = labels.get("com.docker.compose.project")
+            if not mount or not project or not name or name in known_names:
+                continue
+            profile = {
+                "name": name,
+                "workspace_root": mount["Source"],
+                "compose_project": project,
+            }
+            result.append(profile)
+            known_names.add(name)
+    except (OSError, json.JSONDecodeError, IndexError):
+        pass
     return result
 
 def project_config(directory: Path) -> dict | None:
