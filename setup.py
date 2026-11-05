@@ -89,7 +89,7 @@ def main():
     wrapper=bindir/"devbox"
     wrapper.write_text("""#!/usr/bin/env bash
 set -Eeuo pipefail
-exec python3 "$HOME/.local/bin/devbox.py" "$@"
+exec python3 "$(dirname "$0")/devbox.py" "$@"
 """,encoding="utf-8")
     wrapper.chmod(0o755)
 
