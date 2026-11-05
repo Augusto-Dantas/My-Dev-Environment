@@ -1,65 +1,55 @@
 # My-Dev-Environment
 
-A ready-to-use development environment powered by Docker, Zsh, Neovim, and NvChad, with optional AI coding assistants.
+Container de desenvolvimento configurável com Docker, Zsh, pacotes por linguagem, editor selecionável e integrações opcionais de IA.
 
-## Requirements
+## Instalação sem clonar o repositório completo
 
-- Git
-- Docker Engine or Docker Desktop with Docker Compose v2
-- An interactive terminal
+Requisitos no host: Docker Engine/Desktop com Compose v2, Git, curl e Python 3.
 
-## Quick start
-
-Clone the repository, enter it, and run the setup wizard **before building the container**:
+Baixe e execute somente o instalador:
 
 ```bash
-git clone https://github.com/Augusto-Dantas/My-Dev-Environment.git
-cd My-Dev-Environment
-bash setup.sh
-docker compose up -d --build
-docker compose exec devenv zsh
+curl -fsSL https://raw.githubusercontent.com/Augusto-Dantas/My-Dev-Environment/main/setup.sh | bash
 ```
 
-The setup wizard creates a private local `.env` file. It lets you enable AI integrations and optionally enter provider API keys. The file is excluded from Git. You can also edit `.env` manually using `.env.example` as a template.
+O instalador abre uma TUI para escolher:
+- Pacotes de linguagem: Rust, C/C++, Python, Node.js/TypeScript, Go e Java.
+- Editor: Neovim + NvChad, Vim, Helix ou nenhum.
+- Integrações opcionais: GitHub Copilot e CodeCompanion (OpenAI, Anthropic, Gemini ou Ollama).
 
-## AI assistants
+Por baixo, o instalador faz um *sparse checkout* apenas de `Dockerfile`, `docker-compose.yml`, `.zshrc` e `nvim-config/`. Não baixa o histórico nem o conteúdo desnecessário do repositório. A imagem Docker é construída sob demanda na primeira execução.
 
-### GitHub Copilot
+## Usar o container em qualquer diretório
 
-Enable it in the setup wizard. On the first Neovim launch, authenticate with:
+Depois da instalação, adicione `~/.local/bin` ao PATH (o instalador informa o comando caso necessário). Acesse qualquer pasta de projeto no host e execute:
 
-```vim
-:Copilot auth
+```bash
+cd ~/projetos/meu-projeto
+devbox
 ```
 
-Copilot authentication is performed interactively by GitHub; no token is stored by the setup wizard.
+O diretório atual é montado em `/workspace` dentro do container. Cada diretório do host recebe um ambiente Compose próprio, então você pode abrir projetos diferentes sem trocar manualmente o diretório de instalação.
 
-### CodeCompanion
+Comandos:
+- `devbox` ou `devbox shell`: iniciar e entrar no ambiente.
+- `devbox up`: iniciar em segundo plano.
+- `devbox status`: ver o estado.
+- `devbox logs`: acompanhar logs.
+- `devbox down`: parar/remover o container daquele diretório.
+- `devbox restart`: reconstruir e reiniciar.
 
-Enable CodeCompanion in the wizard to add an AI chat, inline assistant, and action palette. It supports configuring providers such as OpenAI, Anthropic, Google Gemini, and local Ollama models. Set the matching API key in `.env` (or configure Ollama in your Neovim CodeCompanion adapter settings).
+## Rust
 
-Keymaps:
-- `<leader>aa`: AI actions
-- `<leader>ac`: toggle AI chat
-- `<leader>ai`: inline assistant
+Ao selecionar Rust, a imagem instala rustup com toolchain stable, Cargo, rust-analyzer, Clippy e rustfmt. O cache do Cargo é persistido entre execuções.
 
-Provider keys are optional at setup time and should only be supplied for services you use.
+## Editores e IA
 
-## Useful commands
+Copilot e CodeCompanion são habilitados apenas quando Neovim for selecionado. No primeiro uso do Copilot, rode `:Copilot auth`. As chaves de provedores de IA são opcionais e ficam em `~/.local/share/my-dev-environment/.env`, com permissão restrita; nunca são adicionadas ao repositório.
 
-Run these from the project directory:
+## Reconfigurar
 
-| Command | Description |
-| --- | --- |
-| `docker compose exec devenv zsh` | Open another shell in the container |
-| `docker compose down` | Stop and remove the container |
-| `docker compose build --no-cache devenv` | Rebuild the image from scratch |
-| `docker compose logs -f devenv` | Follow container logs |
+Execute novamente o instalador para selecionar outro conjunto de pacotes/editor. A imagem será reconstruída quando executar `devbox restart` ou `devbox` após atualização da configuração.
 
-Your files in `./workspace` are available inside the container at `/workspace`. Neovim data and Cargo registry data are persisted in Docker volumes.
+## Segurança
 
-## Security
-
-- Never commit `.env` or paste API keys into issues or chat.
-- Rotate a key immediately if it is accidentally exposed.
-- AI integrations are opt-in; with both options disabled, the base environment works as before.
+Não compartilhe o arquivo local `.env`. Revogue imediatamente qualquer chave que tenha sido exposta.
