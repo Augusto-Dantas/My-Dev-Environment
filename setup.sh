@@ -8,6 +8,6 @@ mkdir -p "$ROOT" "$BIN_DIR"
 TMP="$(mktemp)"
 trap 'rm -f "$TMP"' EXIT
 URL="https://raw.githubusercontent.com/$REPO/$REF/setup.py"
-command -v python3 >/dev/null || { echo "Python 3 é necessário para executar a TUI." >&2; exit 1; }
+command -v python3 >/dev/null || { echo "Python 3 is required to run the setup TUI." >&2; exit 1; }
 curl -fsSL "$URL" -o "$TMP"
 python3 "$TMP" --root "$ROOT" --repo "https://github.com/$REPO.git" --ref "$REF" --bin-dir "$BIN_DIR"
