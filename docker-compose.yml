@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        USER_UID: ${DEVBOX_UID:-1000}
+        USER_GID: ${DEVBOX_GID:-1000}
         EDITOR_CHOICE: ${EDITOR_CHOICE:-nvim}
         INSTALL_RUST: ${INSTALL_RUST:-0}
         INSTALL_CPP: ${INSTALL_CPP:-0}
@@ -17,8 +19,6 @@ services:
     stdin_open: true
     working_dir: /workspace
     command: ["sleep", "infinity"]
-    env_file:
-      - .env
     volumes:
       - ${DEVBOX_WORKSPACE:-./workspace}:/workspace
       - nvim-data:/home/developer/.local/share/nvim
@@ -28,6 +28,11 @@ services:
       TERM: xterm-256color
       COLORTERM: truecolor
       SHELL: /bin/zsh
+      ENABLE_COPILOT: ${ENABLE_COPILOT:-0}
+      ENABLE_CODECOMPANION: ${ENABLE_CODECOMPANION:-0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
 
 volumes:
   nvim-data:
