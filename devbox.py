@@ -27,24 +27,6 @@ GITIGNORES = {
     "General": ".DS_Store\nThumbs.db\n.env\n.vscode/\n.idea/\n",
 }
 
-MIT_LICENSE = """MIT License
-
-Copyright (c) {year} {owner}
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-"""
 
 def key_for(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
@@ -211,7 +193,17 @@ def create_project() -> int:
     use_git = ask("Initialize a Git repository?", True)
     add_readme = ask("Create a README.md?", True)
     add_gitignore = ask("Create a .gitignore?", True)
-    license_choice = choose("Add a license?", ["None", "MIT"], 1)
+    gh_available = shutil.which("gh") is not None
+    license_choice = "None"
+    if gh_available:
+        license_choice = choose(
+            "Add a license using GitHub CLI?",
+            ["None", "MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause", "MPL-2.0"],
+            1,
+        )
+    else:
+        print("GitHub CLI (gh) is not installed; license selection is unavailable.")
+
     publish = ask("Create a GitHub repository with GitHub CLI (gh)?", False)
     visibility = "private"
     if publish:
@@ -234,9 +226,22 @@ def create_project() -> int:
         if language != "General":
             content += GITIGNORES["General"]
         (target / ".gitignore").write_text(content, encoding="utf-8")
-    if license_choice == "MIT":
-        owner = os.environ.get("GIT_AUTHOR_NAME") or os.environ.get("USER") or "Copyright holder"
-        (target / "LICENSE").write_text(MIT_LICENSE.format(year=__import__("datetime").date.today().year, owner=owner), encoding="utf-8")
+    if license_choice != "None":
+        license_result = subprocess.run(
+            ["gh", "repo", "license", "view", license_choice],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if license_result.returncode:
+            print(
+                f"Could not retrieve the {license_choice} license from GitHub CLI: "
+                f"{license_result.stderr.strip()}",
+                file=sys.stderr,
+            )
+            shutil.rmtree(target)
+            return 1
+        (target / "LICENSE").write_text(license_result.stdout, encoding="utf-8")
 
     if use_git:
         init = subprocess.run(["git", "init", "-b", "main", str(target)], capture_output=True, text=True)
