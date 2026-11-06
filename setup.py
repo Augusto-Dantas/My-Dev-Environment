@@ -128,6 +128,9 @@ def main():
     subprocess.run(["git","-C",str(src),"sparse-checkout","set","--no-cone","Dockerfile","docker-compose.yml",".zshrc","nvim-config","devbox.py"],check=True)
     (root/".env").write_text("# Local Devbox configuration. Keep this file private.\n"+"".join(f"{k}={dotenv_quote(v)}\n" for k,v in env.items()),encoding="utf-8")
     (root/".env").chmod(0o600)
+    startup_file=root/"startup.sh"
+    startup_file.write_text("#!/usr/bin/env bash\nset -Eeuo pipefail\n"+"".join(f"{command}\n" for command in startup_commands),encoding="utf-8")
+    startup_file.chmod(0o700)
     bindir=Path(a.bin_dir).expanduser(); bindir.mkdir(parents=True,exist_ok=True)
     cli = bindir/"devbox.py"
     shutil.copy2(src/"devbox.py", cli)
