@@ -2,6 +2,7 @@
 """Standalone installer: sparse-checkout only the files required for the image."""
 from __future__ import annotations
 import argparse, curses, getpass, os, secrets, shutil, subprocess
+import yaml
 from pathlib import Path
 
 LANGUAGES = [
@@ -53,18 +54,56 @@ def dotenv_quote(v):
 def main():
     p=argparse.ArgumentParser()
     for name in ("root","repo","ref","bin-dir"): p.add_argument("--"+name,required=True)
+    p.add_argument("--config", help="Load a non-interactive installation from a YAML file")
+    p.add_argument("--save-config", help="Save the selected options to this YAML file")
     a=p.parse_args()
     for tool in ("git","docker","curl","gh"):
         if not shutil.which(tool): raise SystemExit(f"Missing required dependency: {tool}")
     if subprocess.run(["gh","--version"],capture_output=True).returncode:
         raise SystemExit("GitHub CLI (gh) is required. Install it and try again.")
-    print("Rust is selected by default. Select one or more editors (Space toggles each option):")
-    state=curses.wrapper(tui)
-    if state is None: print("Setup cancelled."); return 1
+    startup_commands=[]
+    if a.config:
+      try:
+        config=yaml.safe_load(Path(a.config).expanduser().read_text(encoding="utf-8")) or {}
+      except (OSError, yaml.YAMLError) as exc:
+        raise SystemExit(f"Could not read YAML configuration: {exc}")
+      if not isinstance(config,dict) or config.get("version") != 1:
+        raise SystemExit("Configuration must be a YAML mapping with version: 1.")
+      allowed_languages={key for key,_ in LANGUAGES}; allowed_editors={key for key,_ in EDITORS}
+      languages=config.get("languages",[]); editors=config.get("editors",[])
+      if not isinstance(languages,list) or any(x not in allowed_languages for x in languages):
+        raise SystemExit(f"languages must be a list containing only: {', '.join(sorted(allowed_languages))}")
+      if not isinstance(editors,list) or not editors or any(x not in allowed_editors for x in editors):
+        raise SystemExit(f"editors must be a non-empty list containing only: {', '.join(sorted(allowed_editors))}")
+      assistants=config.get("assistants",{}) or {}
+      startup=config.get("startup",{}) or {}
+      if not isinstance(assistants,dict) or not isinstance(startup,dict):
+        raise SystemExit("assistants and startup must be YAML mappings.")
+      startup_commands=startup.get("commands",[]) or []
+      if not isinstance(startup_commands,list) or any(not isinstance(x,str) or not x.strip() for x in startup_commands):
+        raise SystemExit("startup.commands must be a list of non-empty shell command strings.")
+      state={"langs":{key:key in languages for key in allowed_languages},
+             "editors":{key:key in editors for key in allowed_editors},
+             "copilot":bool(assistants.get("copilot",False)),
+             "chat":bool(assistants.get("codecompanion",False))}
+      print(f"Applying YAML configuration: {a.config}")
+    else:
+      print("Rust is selected by default. Select one or more editors (Space toggles each option):")
+      state=curses.wrapper(tui)
+      if state is None: print("Setup cancelled."); return 1
     selected_editors=[key for key,_ in EDITORS if state["editors"][key]]
     if not selected_editors:
       print("Select at least one editor."); return 1
     editor=selected_editors[0]
+    if a.save_config:
+      saved={"version":1,"languages":[key for key,_ in LANGUAGES if state["langs"][key]],
+             "editors":selected_editors,
+             "assistants":{"copilot":state["copilot"],"codecompanion":state["chat"]},
+             "startup":{"commands":startup_commands}}
+      output=Path(a.save_config).expanduser()
+      output.parent.mkdir(parents=True,exist_ok=True)
+      output.write_text(yaml.safe_dump(saved,sort_keys=False,allow_unicode=True),encoding="utf-8")
+      print(f"Saved installation configuration: {output}")
     env={
       "EDITOR_CHOICE":editor,
       "EDITOR_CHOICES":",".join(selected_editors),
