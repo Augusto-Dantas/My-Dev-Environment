@@ -123,7 +123,10 @@ def main():
     }
     if env["ENABLE_CODECOMPANION"]=="1":
       for key,label in (("OPENAI_API_KEY","OpenAI"),("ANTHROPIC_API_KEY","Anthropic"),("GEMINI_API_KEY","Google Gemini")):
-        env[key]=getpass.getpass(label+" API key (press Enter to skip): ")
+        if a.config:
+          env[key]=os.environ.get(key,"")
+        else:
+          env[key]=getpass.getpass(label+" API key (press Enter to skip): ")
     root=Path(a.root).expanduser(); src=root/"source"
     root.mkdir(parents=True,exist_ok=True)
     if src.exists(): shutil.rmtree(src)
@@ -146,33 +149,36 @@ exec python3 "$(dirname "$0")/devbox.py" "$@"
     wrapper.chmod(0o755)
 
     path_entry = str(bindir.resolve())
-    print(f"\nWould you like to add {path_entry} to your PATH permanently? [y/N] ", end="", flush=True)
-    answer = input().strip().lower()
-    if answer in ("y", "yes"):
-        shell = Path(os.environ.get("SHELL", "")).name
-        if shell == "zsh":
-            rc = Path.home() / ".zshrc"
-            path_line = f'export PATH="{path_entry}:$PATH"'
-        elif shell == "fish":
-            rc = Path.home() / ".config/fish/config.fish"
-            path_line = f' fish_add_path "{path_entry}"'.lstrip()
-        elif shell == "bash":
-            rc = Path.home() / ".bashrc"
-            path_line = f'export PATH="{path_entry}:$PATH"'
-        else:
-            rc = Path.home() / ".profile"
-            path_line = f'export PATH="{path_entry}:$PATH"'
-        rc.parent.mkdir(parents=True, exist_ok=True)
-        existing = rc.read_text(encoding="utf-8") if rc.exists() else ""
-        if path_line not in existing:
-            with rc.open("a", encoding="utf-8") as config:
-                if existing and not existing.endswith("\\n"):
-                    config.write("\\n")
-                config.write(f"\\n# My Dev Environment CLI\\n{path_line}\\n")
-        print(f"Added {path_entry} to PATH in {rc}.")
-        print("Open a new terminal or reload the shell configuration to use devbox.")
+    if a.config:
+        print(f"Non-interactive install: add {path_entry} to PATH in your shell configuration if needed.")
     else:
-        print("Skipped PATH configuration. You can add ~/.local/bin to PATH later.")
+        print(f"\\nWould you like to add {path_entry} to your PATH permanently? [y/N] ", end="", flush=True)
+        answer = input().strip().lower()
+        if answer in ("y", "yes"):
+            shell = Path(os.environ.get("SHELL", "")).name
+            if shell == "zsh":
+                rc = Path.home() / ".zshrc"
+                path_line = f'export PATH="{path_entry}:$PATH"'
+            elif shell == "fish":
+                rc = Path.home() / ".config/fish/config.fish"
+                path_line = f' fish_add_path "{path_entry}"'.lstrip()
+            elif shell == "bash":
+                rc = Path.home() / ".bashrc"
+                path_line = f'export PATH="{path_entry}:$PATH"'
+            else:
+                rc = Path.home() / ".profile"
+                path_line = f'export PATH="{path_entry}:$PATH"'
+            rc.parent.mkdir(parents=True, exist_ok=True)
+            existing = rc.read_text(encoding="utf-8") if rc.exists() else ""
+            if path_line not in existing:
+                with rc.open("a", encoding="utf-8") as config:
+                    if existing and not existing.endswith("\\n"):
+                        config.write("\\n")
+                    config.write(f"\\n# My Dev Environment CLI\\n{path_line}\\n")
+            print(f"Added {path_entry} to PATH in {rc}.")
+            print("Open a new terminal or reload the shell configuration to use devbox.")
+        else:
+            print("Skipped PATH configuration. You can add ~/.local/bin to PATH later.")
 
     print("\\nSetup complete. Change to any project directory and run: devbox")
     return 0
