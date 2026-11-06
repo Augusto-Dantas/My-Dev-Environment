@@ -35,7 +35,7 @@ To install non-interactively from a saved YAML configuration, pass `--config`:
 DEVBOX_REF=main bash /tmp/devbox-setup.sh --config ./devbox.yaml
 ```
 
-The installer automatically creates an isolated Python virtual environment for its YAML parser (PyYAML); it does not modify your system Python packages. If you use a custom configuration file, keep it in your project or another backed-up location so it can be reused.
+When PyYAML is not already available, the installer creates an isolated Python virtual environment and installs it there; it does not modify your system Python packages. With `--config`, setup skips the interactive wizard and PATH prompt. Add `~/.local/bin` to `PATH` yourself if needed. If CodeCompanion is enabled, provide any provider keys through the `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` environment variables. If you use a custom configuration file, keep it in your project or another backed-up location so it can be reused.
 
 Use the arrow keys to navigate, **Space** to toggle options, **Enter** to confirm, and **q** to cancel.
 
