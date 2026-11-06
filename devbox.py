@@ -127,6 +127,7 @@ def compose(profile: dict, workspace: Path, command: list[str]) -> int:
     env.update({
         "DEVBOX_WORKSPACE": str(root),
         "DEVBOX_CONTAINER_NAME": profile["name"],
+        "DEVBOX_STARTUP_SCRIPT": str(ROOT / "startup.sh"),
     })
     project_id = profile.get("compose_project") or ("devbox-" + key_for(str(root))[:10])
     args = ["docker", "compose", "--env-file", str(ENV_FILE), "-f", str(COMPOSE),
