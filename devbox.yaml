@@ -1,0 +1,25 @@
+version: 1
+
+# Select any combination of supported language toolchains.
+languages:
+  - rust
+  - python
+  - node
+  - cpp
+
+# The first editor in this list becomes $EDITOR.
+editors:
+  - nvim
+  - helix
+  - code-server
+
+assistants:
+  copilot: true
+  codecompanion: false
+
+# Commands run as the developer user whenever the container starts.
+# Keep this list idempotent: startup commands can run more than once.
+startup:
+  commands:
+    - "mkdir -p /workspace/.cache"
+    - "if [ -f package.json ]; then npm install; fi"
