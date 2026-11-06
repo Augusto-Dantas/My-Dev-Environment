@@ -21,9 +21,10 @@ services:
     tty: true
     stdin_open: true
     working_dir: /workspace
-    command: ["sleep", "infinity"]
+    command: ["/bin/zsh", "-lc", "if [ -s /opt/devbox/startup.sh ]; then bash /opt/devbox/startup.sh; fi; exec sleep infinity"]
     volumes:
       - ${DEVBOX_WORKSPACE:-./workspace}:/workspace
+      - ${DEVBOX_STARTUP_SCRIPT:-./startup.sh}:/opt/devbox/startup.sh:ro
       - nvim-data:/home/developer/.local/share/nvim
       - nvim-state:/home/developer/.local/state/nvim
       - cargo-cache:/home/developer/.cargo/registry
