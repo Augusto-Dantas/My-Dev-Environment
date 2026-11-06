@@ -79,6 +79,9 @@ def main():
       startup=config.get("startup",{}) or {}
       if not isinstance(assistants,dict) or not isinstance(startup,dict):
         raise SystemExit("assistants and startup must be YAML mappings.")
+      for assistant in ("copilot","codecompanion"):
+        if assistant in assistants and not isinstance(assistants[assistant],bool):
+          raise SystemExit(f"assistants.{assistant} must be true or false.")
       startup_commands=startup.get("commands",[]) or []
       if not isinstance(startup_commands,list) or any(not isinstance(x,str) or not x.strip() for x in startup_commands):
         raise SystemExit("startup.commands must be a list of non-empty shell command strings.")
