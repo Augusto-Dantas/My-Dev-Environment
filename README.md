@@ -146,7 +146,7 @@ The current host directory is mounted into the container at `/workspace`. Each h
 | `devbox gui` | Start code-server in the linked container |
 | `devbox restart` | Rebuild and restart the linked container |
 | `devbox down` | Stop and remove the linked container |
-| `devbox --uninstall` | Uninstall Devbox after explicit confirmation |
+| `devbox --uninstall` | Uninstall Devbox |
 
 ### Create a project
 
