@@ -1,0 +1,33 @@
+{
+  "name": "My-Dev-Environment",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": "..",
+    "args": {
+      "INSTALL_PYTHON": "1",
+      "EDITOR_CHOICE": "nvim",
+      "EDITOR_CHOICES": "nvim"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "remoteUser": "developer",
+  "containerEnv": {
+    "TERM": "xterm-256color",
+    "COLORTERM": "truecolor",
+    "SHELL": "/bin/zsh"
+  },
+  "forwardPorts": [8080],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}
